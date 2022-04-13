@@ -3,6 +3,8 @@
   :to="`/movie/${movie.imdbID}`"
   :style="{ backgroundImage: `url(${movie.Poster})`}"
   class="movie">
+  <Loader v-if="imageLoading" :size="1.5" absolute >
+  </Loader>
     <div class="info">
       <div class="year">
       {{ movie.Year }}
@@ -15,18 +17,40 @@
 </template>
 
 <script>
+import Loader from '~/components/Loader'
 export default {
+  components: {
+    Loader
+  },
   props: {
     movie: {
       type: Object,
       defeult: () => ({})
     }
-  }
+  },
+  data() {
+    return {
+      imageLoading: true
+    }
+  },
+  mounted() {
+    this.init()
+  },
+  methods: {
+    async init() {
+      const poster = this.movie.Poster
+      if (!poster || poster === 'N/A') {
+        this.imageLoading = false
+      } else {
+        await this.$loadImage(poster)
+        this.imageLoading = false
+      }
+    }
+  },
 }
 </script>
 
 <style lang="scss" scoped>
-@import "~/scss/main";
   .movie {
     $width: 168px;
     width: $width;

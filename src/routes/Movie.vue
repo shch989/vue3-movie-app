@@ -19,7 +19,11 @@
       </Loader>
     </template>
     <div v-else class="movie-details">
-      <div :style="{ backgroundImage: `url(${theMovie.Poster})` }" class="poster"></div>
+      <div :style="{ backgroundImage: `url(${requestDiffSizeImage(theMovie.Poster)})` }" 
+      class="poster">
+        <Loader v-if="imageLoading" absolute>
+        </Loader>
+      </div>
       <div class="specs">
         <div class="title">
           {{ theMovie.Title }}
@@ -34,6 +38,18 @@
         </div>
         <div class="ratings">
           <h3>Ratings</h3>
+          <div class="rating-wrap">
+            <div
+              v-for="{ Source: name, Value: score } in theMovie.Ratings"
+              :key="name"
+              :title="name"
+              class="rating">
+              <img
+                :src="`https://raw.githubusercontent.com/ParkYoungWoong/vue3-movie-app/master/src/assets/${name}.png`"
+                :alt="name" />
+              <span>{{ score }}</span>
+            </div>
+          </div>
         </div>
         <div>
           <h3>Actors</h3>
@@ -63,6 +79,11 @@ export default {
   components: {
     Loader
   },
+  data() {
+    return {
+      imageLoading: true
+    }
+  },
   computed: {
     theMovie() {
       return this.$store.state.movie.theMovie
@@ -77,11 +98,23 @@ export default {
       id: this.$route.params.movieId
     })
   },
+  methods: {
+    requestDiffSizeImage(url, size = 700) {
+      if(!url || url === 'N/A') {
+        this.imageLoading = false
+        return ''
+      }
+      const src = url.replace('SX300', `SX${size}`);
+      this.$loadImage(src).then(() => {
+        this.imageLoading = false
+      })
+      return src
+    }
+  },
 }
 </script>
 
 <style lang="scss" scoped>
-@import "~/scss/main";
 
   .container {
     padding-top: 40px;
@@ -133,6 +166,7 @@ export default {
       background-color: $gray-200;
       background-size: cover;
       background-position: center;
+      position: relative;
     }
     .specs {
       flex-grow: 1;
@@ -158,14 +192,54 @@ export default {
       .plot {
         margin-top: 20px;
       }
-      .ratings {
-
+    .ratings {
+      .rating-wrap {
+        display: flex;
+        .rating {
+          display: flex;
+          align-items: center;
+          margin-right: 32px;
+          img {
+            height: 30px;
+            flex-shrink: 0;
+            margin-right: 6px;
+          }
+        }
       }
+    }
       h3 {
         margin: 24px 0 6px;
         color: $black;
         font-family: 'Oswald', sans-serif;
         font-size: 20px;
+      }
+    }
+    @include media-breakpoint-down(xl) {
+      .poster {
+        width: 300px;
+        height: 300px * 3 / 2;
+        margin-right: 40px;
+      }
+    }
+    @include media-breakpoint-down(lg) {
+      display: block;
+      .poster {
+        margin-bottom: 40px;
+      }
+    }
+    @include media-breakpoint-down(md) {
+      .specs {
+        .title {
+          font-size: 50px;
+        }
+        .ratings {
+          .rating-wrap {
+            display: block;
+            .rating {
+              margin-top: 10px;
+            }
+          }
+        }
       }
     }
   }
